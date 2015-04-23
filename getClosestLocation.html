@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html>
+<head>
+
+<style type="text/css">  
+   html { height: 100% }  
+   body { height: 100%; margin: 0; padding: 0 }  
+   #map-canvas { height: 100% }  
+</style>  
+
+<script type="text/javascript"  
+	src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDuZzcPweupGvx3ptRGQJxsX7tdZCnWn2Y&sensor=true">  
+</script>  
+
+<script type="text/javascript">  
+
+var locations = [{lat:47.821730, lon:-122.365431, place:"Seattle, WA"}, 
+				  {lat: 34.056915, lon: -118.213979, place: "Los Angeles, CA"}]; 
+var map; 
+
+function init()
+{
+	if (navigator.geolocation)
+	{
+		navigator.geolocation.getCurrentPosition(UserLocation, errorCallback, {maximumAge:60000, timeout:10000});
+	}
+	else 
+	{
+		ClosestLocation(38.8951,-77.0367,"Washington, DC"); 
+	}
+  
+}
+function errorCallback(error)
+{
+}
+
+function UserLocation(position)
+{
+	ClosestLocation(position.coords.latitude, position.coords.longitude, "This is my location"); 
+}
+// Find the closest location to the user's location 
+function ClosestLocation(lat, lon, title)
+{
+	// create a google coordinate object for where to center the map
+	var myLatlng = new google.maps.LatLng(lat, lon);
+	
+	// Map options for how to display the google map
+	var mapOptions = {
+     zoom: 12,
+     center: myLatlng,
+   };
+	// Show the google map in the div with the attribute id'map-canvas'
+    map = new google.maps.Map(document.getElementById('map-canvas'),
+      mapOptions);
+	 
+	 var closest = 0; 
+	 var mindist = 99999; 
+	 
+	 for (var i=0; i< locations.length; i++)
+	 {
+		//get the distance between user's location and this point
+		var dist = Haversine(locations[i].lat, locations[i].lon, lat, lon);  
+		//Check if this is the shortest distance so far
+		if (dist < mindist)
+		{
+			closest = i; 
+			mindist = dist; 
+		}
+	 }
+	 
+	 // Create a google coordinate object for the closest location 
+	 var latlng = new google.maps.LatLng(locations[closest].lat, locations[closest].lon); 
+	 // Place a google marker at the closest location as the map center 
+	 var marker2 = new google.maps.Marker({
+		position: latlng,
+		map: map, 
+		title: "Closest location to User: distance is " + mindist + " km"
+	 }); 
+	 
+	 // Create an infoWindow for the marker 
+	 var contentString = "" + "Closest Location to User:" + locations[closest].place + ""; 
+	 var infowindow = new google.maps.InfoWindow({content:contentString}); 
+	 
+	 // Set event to display the InfoWindow anchored to the marker when the marker is clicked
+	 google.maps.event.addListener(marker2, 'click', function(){infowindow.open(map, marker2);}); 
+	 map.setCenter(latlng); 
+	 
+	 //Convert Degree to Radians
+	 function Deg2Rad(deg)
+	 {
+		return deg * Math.PI/180; 
+	 }
+	 // Get Distance between two lat/lng points using the Haversine
+	 function Haversine(lat1, lon1, lat2, lon2)
+	 {
+		var R = 6372.8; // Earth Radius in Kilometers 
+		
+		var dLat = Deg2Rad(lat2 - lat1); 
+		var dLon = Deg2Rad(lon2 - lon1); 
+		
+		var a = Math.sin(dLat/2) * Math.sin(dLat/2) + 
+				Math.cos(De2Rad(lat1)) * Math.cos(Deg2Rad(lat2)) * 
+				Math.sin(dLon/2) * math.sin(dLon/2); 
+		
+		var c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a)); 
+		var d = R* c; 
+		
+		// Return distance in Kilometers
+		return d; 
+	 }
+}
+	function UpdateMap()
+	{
+		
+	}
+
+	// Call the method "init()" to display the google map when the web pate is load
+	google.maps.event.addDomListener(window, 'load', init); </script> 
+
+</head>
+<body>
+
+<div id = 'map-canvas'> </div> <br/>
+<div>
+	<label for = "address">Address:</label>
+	<input type = "text" id="address"/>
+	<button onclick = "UpdateMap()">Locate </button>
+</div>
+</body>
+</html>
